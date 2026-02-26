@@ -21,30 +21,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Download Gradle and generate wrapper JAR
-        run: |
-          cd MKNotes
-          curl -sL https://services.gradle.org/distributions/gradle-7.6.3-bin.zip -o /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /tmp
-          /tmp/gradle-7.6.3/bin/gradle wrapper --gradle-version 7.6.3 --no-daemon
-
-      - name: Make gradlew executable
-        run: chmod +x MKNotes/gradlew
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          gradle-version: '7.6.3'
 
       - name: Build Debug APK
-        run: |
-          cd MKNotes
-          ./gradlew assembleDebug --no-daemon --stacktrace
+        working-directory: MKNotes
+        run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -54,9 +38,8 @@ jobs:
           retention-days: 30
 
       - name: Build Release APK
-        run: |
-          cd MKNotes
-          ./gradlew assembleRelease --no-daemon --stacktrace
+        working-directory: MKNotes
+        run: gradle assembleRelease --no-daemon --stacktrace
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
