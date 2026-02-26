@@ -21,18 +21,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Gradle Wrapper JAR
+      - name: Download Gradle and generate wrapper JAR
         run: |
           cd MKNotes
-          # Download Gradle 7.6.3 distribution and extract wrapper jar
           curl -sL https://services.gradle.org/distributions/gradle-7.6.3-bin.zip -o /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /tmp/gradle-dist
-          cp /tmp/gradle-dist/gradle-7.6.3/lib/gradle-wrapper-*.jar gradle/wrapper/gradle-wrapper.jar || true
-          # If the above doesn't find it, use the wrapper from the distribution
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            # Alternative: generate wrapper using the downloaded gradle
-            /tmp/gradle-dist/gradle-7.6.3/bin/gradle wrapper --gradle-version 7.6.3
-          fi
+          unzip -q /tmp/gradle.zip -d /tmp
+          /tmp/gradle-7.6.3/bin/gradle wrapper --gradle-version 7.6.3 --no-daemon
 
       - name: Make gradlew executable
         run: chmod +x MKNotes/gradlew
