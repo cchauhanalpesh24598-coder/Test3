@@ -4,16 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 /**
- * Singleton wrapper around Firebase Authentication.
+ * Singleton wrapper around Firebase Authentication (Official SDK).
  * Handles register, login, logout, UID storage.
- * No lambdas, pure Java, no AndroidX.
+ * Uses official FirebaseAuth SDK - no manual REST calls, no API key passing.
+ * Token refresh is handled automatically by the SDK.
  */
 public class FirebaseAuthManager {
 
@@ -23,8 +21,8 @@ public class FirebaseAuthManager {
     private static final String KEY_EMAIL = "firebase_email";
 
     private static FirebaseAuthManager sInstance;
-    private FirebaseAuth firebaseAuth;
-    private SharedPreferences prefs;
+    private final FirebaseAuth firebaseAuth;
+    private final SharedPreferences prefs;
 
     public static synchronized FirebaseAuthManager getInstance(Context context) {
         if (sInstance == null) {
@@ -40,27 +38,26 @@ public class FirebaseAuthManager {
 
     /**
      * Register a new user with email and password.
+     * Uses official Firebase Auth SDK - API key is read from google-services.json automatically.
      */
     public void register(final String email, final String password, final AuthCallback callback) {
         try {
             firebaseAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                        public void onComplete(Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                FirebaseUser user = firebaseAuth.getCurrentUser();
-                                if (user != null) {
-                                    storeUid(user.getUid());
-                                    storeEmail(email);
-                                }
-                                callback.onSuccess();
-                            } else {
-                                String msg = "Registration failed";
-                                if (task.getException() != null) {
-                                    msg = task.getException().getMessage();
-                                }
-                                Log.e(TAG, "Register failed: " + msg);
-                                callback.onFailure(msg);
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
+                            if (user != null) {
+                                storeUid(user.getUid());
+                                storeEmail(email);
                             }
+                            callback.onSuccess();
+                        } else {
+                            String msg = "Registration failed";
+                            if (task.getException() != null) {
+                                msg = task.getException().getMessage();
+                            }
+                            Log.e(TAG, "Register failed: " + msg);
+                            callback.onFailure(msg);
                         }
                     });
         } catch (Exception e) {
@@ -71,27 +68,26 @@ public class FirebaseAuthManager {
 
     /**
      * Login existing user with email and password.
+     * Uses official Firebase Auth SDK - API key is read from google-services.json automatically.
      */
     public void login(final String email, final String password, final AuthCallback callback) {
         try {
             firebaseAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                        public void onComplete(Task<AuthResult> task) {
-                            if (task.isSuccessful()) {
-                                FirebaseUser user = firebaseAuth.getCurrentUser();
-                                if (user != null) {
-                                    storeUid(user.getUid());
-                                    storeEmail(email);
-                                }
-                                callback.onSuccess();
-                            } else {
-                                String msg = "Login failed";
-                                if (task.getException() != null) {
-                                    msg = task.getException().getMessage();
-                                }
-                                Log.e(TAG, "Login failed: " + msg);
-                                callback.onFailure(msg);
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
+                            if (user != null) {
+                                storeUid(user.getUid());
+                                storeEmail(email);
                             }
+                            callback.onSuccess();
+                        } else {
+                            String msg = "Login failed";
+                            if (task.getException() != null) {
+                                msg = task.getException().getMessage();
+                            }
+                            Log.e(TAG, "Login failed: " + msg);
+                            callback.onFailure(msg);
                         }
                     });
         } catch (Exception e) {
