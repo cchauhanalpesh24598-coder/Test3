@@ -1,12 +1,13 @@
 package com.mknotes.app;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.mknotes.app.cloud.FirebaseAuthManager;
 import com.mknotes.app.util.PrefsManager;
@@ -15,9 +16,9 @@ import com.mknotes.app.util.PrefsManager;
  * Firebase Email/Password login/register screen.
  * Separate from MasterPassword - this is for cloud sync authentication.
  * Two modes: LOGIN and REGISTER with toggle.
- * No lambdas, no AndroidX.
+ * Uses AppCompatActivity for proper MaterialComponents theme support.
  */
-public class FirebaseLoginActivity extends Activity {
+public class FirebaseLoginActivity extends AppCompatActivity {
 
     private static final int MODE_LOGIN = 0;
     private static final int MODE_REGISTER = 1;
@@ -34,6 +35,7 @@ public class FirebaseLoginActivity extends Activity {
 
     private FirebaseAuthManager authManager;
 
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_firebase_login);
@@ -45,32 +47,22 @@ public class FirebaseLoginActivity extends Activity {
     }
 
     private void initViews() {
-        etEmail = (EditText) findViewById(R.id.et_firebase_email);
-        etPassword = (EditText) findViewById(R.id.et_firebase_password);
-        tvError = (TextView) findViewById(R.id.tv_firebase_error);
-        tvModeTitle = (TextView) findViewById(R.id.tv_mode_title);
-        btnAction = (Button) findViewById(R.id.btn_firebase_action);
-        tvToggleMode = (TextView) findViewById(R.id.tv_toggle_mode);
-        btnSkip = (TextView) findViewById(R.id.btn_skip);
+        etEmail = findViewById(R.id.et_firebase_email);
+        etPassword = findViewById(R.id.et_firebase_password);
+        tvError = findViewById(R.id.tv_firebase_error);
+        tvModeTitle = findViewById(R.id.tv_mode_title);
+        btnAction = findViewById(R.id.btn_firebase_action);
+        tvToggleMode = findViewById(R.id.tv_toggle_mode);
+        btnSkip = findViewById(R.id.btn_skip);
 
-        btnAction.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                handleAction();
-            }
-        });
+        btnAction.setOnClickListener(v -> handleAction());
 
-        tvToggleMode.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                toggleMode();
-            }
-        });
+        tvToggleMode.setOnClickListener(v -> toggleMode());
 
-        btnSkip.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                // Disable cloud sync and proceed offline
-                PrefsManager.getInstance(FirebaseLoginActivity.this).setCloudSyncEnabled(false);
-                launchMain();
-            }
+        btnSkip.setOnClickListener(v -> {
+            // Disable cloud sync and proceed offline
+            PrefsManager.getInstance(FirebaseLoginActivity.this).setCloudSyncEnabled(false);
+            launchMain();
         });
     }
 
@@ -116,21 +108,19 @@ public class FirebaseLoginActivity extends Activity {
         tvError.setVisibility(View.GONE);
 
         FirebaseAuthManager.AuthCallback callback = new FirebaseAuthManager.AuthCallback() {
+            @Override
             public void onSuccess() {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        PrefsManager.getInstance(FirebaseLoginActivity.this).setCloudSyncEnabled(true);
-                        launchMain();
-                    }
+                runOnUiThread(() -> {
+                    PrefsManager.getInstance(FirebaseLoginActivity.this).setCloudSyncEnabled(true);
+                    launchMain();
                 });
             }
 
+            @Override
             public void onFailure(final String errorMessage) {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        btnAction.setEnabled(true);
-                        showError(errorMessage);
-                    }
+                runOnUiThread(() -> {
+                    btnAction.setEnabled(true);
+                    showError(errorMessage);
                 });
             }
         };
@@ -157,6 +147,8 @@ public class FirebaseLoginActivity extends Activity {
     /**
      * Prevent back press from bypassing - user must login or skip.
      */
+    @SuppressWarnings("MissingSuperCall")
+    @Override
     public void onBackPressed() {
         // Treat back as skip - proceed offline
         PrefsManager.getInstance(this).setCloudSyncEnabled(false);
