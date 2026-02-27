@@ -2,9 +2,7 @@ name: Build APK
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches: [ master, main ]
   workflow_dispatch:
 
 jobs:
@@ -20,30 +18,21 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '7.6.3'
+      - name: Make gradlew executable
+        working-directory: MKNotes
+        run: chmod +x gradlew
 
       - name: Build Debug APK
         working-directory: MKNotes
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Xmx2048m"
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: MKNotes-debug
           path: MKNotes/app/build/outputs/apk/debug/*.apk
-          retention-days: 30
-
-      - name: Build Release APK
-        working-directory: MKNotes
-        run: gradle assembleRelease --no-daemon --stacktrace
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: MKNotes-release
-          path: MKNotes/app/build/outputs/apk/release/*.apk
           retention-days: 30
